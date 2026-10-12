@@ -88,6 +88,540 @@
     <footer>
         <p>&copy; 2026 웹 프로그래밍 실습 페이지. All rights reserved.</p>
     </footer>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAR★NEWS - 연예 이슈 및 최신 소식</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Noto Sans KR) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f5ff',
+                            100: '#e0ebff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar hide for category drag */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Smooth transitions */
+        .tab-transition {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 antialiased pb-20 md:pb-6">
 
+    <!-- 1. 상단 헤더 (Header) -->
+    <header class="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+            <!-- 로고 -->
+            <div class="flex items-center gap-2 cursor-pointer" onclick="setActiveTab('home')">
+                <span class="text-2xl font-black tracking-wider text-blue-600 flex items-center gap-1">
+                    STAR<i class="fa-solid fa-star text-xl text-blue-500"></i>NEWS
+                </span>
+            </div>
+
+            <!-- 검색창 (데스크탑/태블릿) -->
+            <div class="hidden md:flex flex-1 max-w-md relative">
+                <input type="text" id="desktopSearchInput" placeholder="연예인, 이슈, 키워드 검색" 
+                       class="w-full bg-gray-100 text-sm rounded-full pl-10 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-sm"></i>
+                <button onclick="performSearch('desktop')" class="absolute right-3 top-2 text-gray-400 hover:text-blue-600">
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </div>
+
+            <!-- 우측 아이콘 (알림, 프로필, 검색) -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMobileSearch()" class="md:hidden w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button onclick="showToast('새로운 알림이 없습니다.')" class="relative w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                <button onclick="showToast('프로필 페이지 준비 중입니다.')" class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                    20
+                </button>
+            </div>
+        </div>
+
+        <!-- 모바일 전용 검색창 확장 영역 -->
+        <div id="mobileSearchArea" class="hidden px-4 pb-3 md:hidden border-t border-gray-100 pt-2">
+            <div class="relative">
+                <input type="text" id="mobileSearchInput" placeholder="관심 있는 연예인을 검색해보세요" 
+                       class="w-full bg-gray-100 text-sm rounded-full pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-gray-400 text-sm"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. 카테고리 메뉴 (Category Navigation) -->
+    <nav class="bg-white border-b border-gray-200 sticky top-16 z-40">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex items-center gap-6 overflow-x-auto no-scrollbar py-3 text-sm font-semibold whitespace-nowrap" id="categoryContainer">
+                <button onclick="selectCategory(this, 'all')" class="category-btn text-blue-600 border-b-2 border-blue-600 pb-1 font-bold">홈</button>
+                <button onclick="selectCategory(this, 'news')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">뉴스</button>
+                <button onclick="selectCategory(this, 'issue')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">이슈</button>
+                <button onclick="selectCategory(this, 'idol')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">아이돌</button>
+                <button onclick="selectCategory(this, 'actor')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">배우</button>
+                <button onclick="selectCategory(this, 'photo')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">포토</button>
+                <button onclick="selectCategory(this, 'video')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">영상</button>
+                <button onclick="selectCategory(this, 'ranking')" class="category-btn text-gray-500 hover:text-gray-900 pb-1">랭킹</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 컨텐츠 영역 (Main Layout Container) -->
+    <main class="max-w-6xl mx-auto px-4 pt-4 md:pt-6">
+        
+        <!-- Top Section: 히어로 배너 + 실시간 인기 키워드 & 미니 리스트 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+            
+            <!-- 4. 실시간 인기 키워드 (실시간 이슈 영역 - 좌측/상단 배치 가능 구조) -->
+            <div class="lg:col-span-3 order-2 lg:order-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                        <h3 class="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire text-red-500"></i> 실시간 인기 키워드
+                        </h3>
+                        <span class="text-xs text-gray-400">14:00 기준</span>
+                    </div>
+
+                    <ul class="space-y-2.5 text-sm" id="keywordList">
+                        <!-- JS로 실시간 키워드 동적 삽입 -->
+                    </ul>
+                </div>
+                
+                <button onclick="showToast('인기 키워드가 업데이트 되었습니다.')" class="w-full mt-4 py-2 bg-gray-50 hover:bg-gray-100 text-xs font-medium text-gray-600 rounded-xl transition-colors flex items-center justify-center gap-1">
+                    <span>더보기</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+
+            <!-- 3. 메인 히어로 카루셀 배너 (Carousel Banner) -->
+            <div class="lg:col-span-6 order-1 lg:order-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative group">
+                <div id="carouselContainer" class="relative h-64 sm:h-80 lg:h-full min-h-[300px] bg-gray-900">
+                    <!-- Carousel Slide Image -->
+                    <img id="carouselImg" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80" 
+                         alt="Main Banner" class="w-full h-full object-cover opacity-80 transition-all duration-500">
+                    
+                    <!-- Gradient Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+
+                    <!-- Hot Badge -->
+                    <div class="absolute top-4 left-4 z-10 flex gap-2">
+                        <span class="bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">HOT</span>
+                        <span id="carouselCategory" class="bg-blue-600/80 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-full font-medium">연예 이슈</span>
+                    </div>
+
+                    <!-- Slide Controls -->
+                    <button onclick="prevSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 z-10">
+                        <i class="fa-solid fa-chevron-left text-sm"></i>
+                    </button>
+                    <button onclick="nextSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 z-10">
+                        <i class="fa-solid fa-chevron-right text-sm"></i>
+                    </button>
+
+                    <!-- Headline Info -->
+                    <div class="absolute bottom-4 left-4 right-4 z-10 text-white">
+                        <h2 id="carouselTitle" class="text-xl sm:text-2xl font-bold leading-tight mb-2 drop-shadow-md">
+                            인기 아이돌 그룹, 새로운 앨범으로 컴백 예고
+                        </h2>
+                        <p id="carouselDate" class="text-xs text-gray-300 font-light">2026.10.12 | 연예 뉴스</p>
+                        
+                        <!-- Dots Indicator -->
+                        <div class="flex items-center gap-1.5 mt-3" id="carouselDots">
+                            <!-- JS Generated -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 우측 서브 뉴스 카드 리스트 -->
+            <div class="lg:col-span-3 order-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-gray-900 text-sm mb-3 pb-2 border-b border-gray-100 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-amber-500"></i> 속보 및 단독
+                    </h3>
+                    <div class="space-y-3" id="subNewsList">
+                        <!-- JS로 서브 뉴스 목록 삽입 -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 3. 주요 뉴스 영역 (Major News Section) -->
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-6 bg-blue-600 rounded-full"></div>
+                    <h2 class="text-lg font-bold text-gray-900">주요 뉴스</h2>
+                </div>
+                <span class="text-xs text-gray-500">지금 가장 주목받는 뉴스를 확인해보세요.</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="majorNewsContainer">
+                <!-- JS에서 주요 뉴스 카드 로드 -->
+            </div>
+        </section>
+
+        <!-- 추가 미디어 섹션 (포토 & 영상 프리뷰) -->
+        <section class="mb-12 bg-gray-900 rounded-2xl p-5 text-white shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-circle-play text-red-500"></i>
+                    오늘의 핫คลิ프 & 포토
+                </h3>
+                <span class="text-xs text-gray-400 hover:text-white cursor-pointer" onclick="setActiveTab('video')">전체보기 <i class="fa-solid fa-angle-right text-[10px]"></i></span>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="mediaPreviewContainer">
+                <!-- JS 삽입 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 5. 하단 네비게이션 바 (Mobile Bottom Navigation Bar) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden shadow-lg">
+        <div class="grid grid-cols-5 h-16">
+            <button onclick="setActiveNav(this, 'home')" class="nav-item text-blue-600 flex flex-col items-center justify-center gap-1">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[11px] font-medium">홈</span>
+            </button>
+            <button onclick="setActiveNav(this, 'issue')" class="nav-item text-gray-400 hover:text-blue-600 flex flex-col items-center justify-center gap-1">
+                <i class="fa-solid fa-fire text-lg"></i>
+                <span class="text-[11px] font-medium">이슈</span>
+            </button>
+            <button onclick="setActiveNav(this, 'search')" class="nav-item text-gray-400 hover:text-blue-600 flex flex-col items-center justify-center gap-1">
+                <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                <span class="text-[11px] font-medium">검색</span>
+            </button>
+            <button onclick="setActiveNav(this, 'fav')" class="nav-item text-gray-400 hover:text-blue-600 flex flex-col items-center justify-center gap-1">
+                <i class="fa-regular fa-heart text-lg"></i>
+                <span class="text-[11px] font-medium">관심</span>
+            </button>
+            <button onclick="setActiveNav(this, 'my')" class="nav-item text-gray-400 hover:text-blue-600 flex flex-col items-center justify-center gap-1">
+                <i class="fa-regular fa-user text-lg"></i>
+                <span class="text-[11px] font-medium">마이</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Toast Message Component -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50">
+        알림 메시지
+    </div>
+
+    <script>
+        // Data Definitions
+        const keywords = [
+            { rank: 1, name: "아이돌 컴백", change: "up", isNew: false },
+            { rank: 2, name: "연애설", change: "same", isNew: false },
+            { rank: 3, name: "드라마 이슈", change: "up", isNew: false },
+            { rank: 4, name: "콘서트 일정", change: "new", isNew: true },
+            { rank: 5, name: "화보 공개", change: "down", isNew: false },
+        ];
+
+        const carouselItems = [
+            {
+                title: "인기 아이돌, 새로운 앨범으로 컴백 예고",
+                category: "연예 이슈",
+                date: "2026.10.12",
+                img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80"
+            },
+            {
+                title: "대작 드라마 주연 배우, 차기작 출연 확정",
+                category: "드라마 이슈",
+                date: "2026.10.12",
+                img: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1000&q=80"
+            },
+            {
+                title: "글로벌 월드투어 일정 공개... 팬들 기대감 고조",
+                category: "아이돌 소식",
+                date: "2026.10.11",
+                img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1000&q=80"
+            },
+            {
+                title: "연예계 스타, 선한 영향력 확산 기부 소식",
+                category: "스타 미담",
+                date: "2026.10.10",
+                img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80"
+            }
+        ];
+
+        const subNewsData = [
+            {
+                title: "드라마 주연 배우, 새로운 작품 합류",
+                date: "2026.10.12",
+                img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+            },
+            {
+                title: "아이돌 그룹, 월드투어 일정 공개",
+                date: "2026.10.11",
+                img: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=200&q=80"
+            },
+            {
+                title: "연예계 스타, 기부 활동 화제",
+                date: "2026.10.10",
+                img: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80"
+            },
+            {
+                title: "신곡 차트 쓸어담은 가수, 최고 기록 경신",
+                date: "2026.10.09",
+                img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80"
+            }
+        ];
+
+        const majorNewsData = [
+            {
+                title: "아이돌 컴백, 팬들 기대감 최고조",
+                desc: "인기 아이돌 그룹이 오는 11월 새로운 앨범으로 컴백을 확정지으며 글로벌 팬들의 기대감이 높아지고 있다.",
+                date: "2026.10.12",
+                img: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=500&q=80"
+            },
+            {
+                title: "드라마 시청률 상승세, 주인공 인터뷰 공개",
+                desc: "최근 방영 중인 화제작 드라마가 높은 시청률을 기록하며, 주연 배우의 비하인드 인터뷰가 전격 공개되었다.",
+                date: "2026.10.11",
+                img: "https://images.unsplash.com/photo-1518173946687-a4c8a383392e?auto=format&fit=crop&w=500&q=80"
+            },
+            {
+                title: "가수 월드투어 일정, 전 세계 10개 도시 확정",
+                desc: "인기 가수가 오는 하반기 월드투어를 개최하며, 총 10개 도시에서 팬들과 만날 예정이다.",
+                date: "2026.10.10",
+                img: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=500&q=80"
+            },
+            {
+                title: "연예계 스타 기부 활동, 선한 영향력 확산",
+                desc: "최근 여러 연예인들이 기부와 봉사 활동에 나서며 사회에 긍정적인 영향력을 미치고 있다.",
+                date: "2026.10.09",
+                img: "https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=500&q=80"
+            }
+        ];
+
+        const mediaItems = [
+            { title: "무대 직캠 레전드", duration: "03:15", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=300&q=80" },
+            { title: "화보 촬영 현장 B컷", duration: "포토", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" },
+            { title: "시상식 레드카펫 단독", duration: "05:40", img: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=300&q=80" },
+            { title: "신곡 MV 메이킹", duration: "02:50", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80" }
+        ];
+
+        // State Management
+        let currentSlide = 0;
+        let slideInterval;
+
+        // Initialization
+        window.onload = function() {
+            renderKeywords();
+            renderSubNews();
+            renderMajorNews();
+            renderMediaPreview();
+            initCarousel();
+            startAutoSlide();
+        };
+
+        // Render Real-time Keywords
+        function renderKeywords() {
+            const listEl = document.getElementById('keywordList');
+            listEl.innerHTML = keywords.map(k => `
+                <li class="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors" onclick="showToast('${k.name} 키워드로 검색합니다.')">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold w-4 text-center ${k.rank <= 3 ? 'text-blue-600' : 'text-gray-400'}">${k.rank}</span>
+                        <span class="font-medium text-gray-700">${k.name}</span>
+                    </div>
+                    ${k.isNew 
+                        ? `<span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">NEW</span>`
+                        : `<i class="fa-solid fa-chevron-right text-[10px] text-gray-300"></i>`}
+                </li>
+            `).join('');
+        }
+
+        // Render Sub News List
+        function renderSubNews() {
+            const container = document.getElementById('subNewsList');
+            container.innerHTML = subNewsData.map(item => `
+                <div class="flex items-center gap-3 group cursor-pointer" onclick="showToast('기사 상세 보기 페이지로 이동합니다.')">
+                    <img src="${item.img}" alt="news" class="w-14 h-14 object-cover rounded-xl flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                            ${item.title}
+                        </h4>
+                        <span class="text-[10px] text-gray-400 mt-1 block">${item.date}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Major News Section
+        function renderMajorNews() {
+            const container = document.getElementById('majorNewsContainer');
+            container.innerHTML = majorNewsData.map(news => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-4 hover:shadow-md transition-all cursor-pointer" onclick="showToast('${news.title} 기사를 읽습니다.')">
+                    <img src="${news.img}" alt="thumbnail" class="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-xl flex-shrink-0">
+                    <div class="flex flex-col justify-between flex-1">
+                        <div>
+                            <h3 class="font-bold text-sm sm:text-base text-gray-900 line-clamp-2 mb-1.5 hover:text-blue-600 transition-colors">
+                                ${news.title}
+                            </h3>
+                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed font-light">
+                                ${news.desc}
+                            </p>
+                        </div>
+                        <span class="text-[11px] text-gray-400 mt-2">${news.date}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Media Preview
+        function renderMediaPreview() {
+            const container = document.getElementById('mediaPreviewContainer');
+            container.innerHTML = mediaItems.map(item => `
+                <div class="relative group rounded-xl overflow-hidden cursor-pointer" onclick="showToast('미디어 플레이어를 재생합니다.')">
+                    <img src="${item.img}" alt="media" class="w-full h-28 object-cover group-hover:scale-110 transition-transform duration-300">
+                    <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+                    <span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] px-1.5 py-0.5 rounded font-mono">${item.duration}</span>
+                    <div class="absolute bottom-2 left-2 right-2">
+                        <p class="text-xs font-semibold text-white truncate">${item.title}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Carousel Functions
+        function initCarousel() {
+            const dotsContainer = document.getElementById('carouselDots');
+            dotsContainer.innerHTML = carouselItems.map((_, idx) => `
+                <button onclick="goToSlide(${idx})" class="w-2 h-2 rounded-full transition-all ${idx === 0 ? 'bg-white w-5' : 'bg-white/40'}"></button>
+            `).join('');
+            updateSlideUI();
+        }
+
+        function updateSlideUI() {
+            const item = carouselItems[currentSlide];
+            document.getElementById('carouselImg').src = item.img;
+            document.getElementById('carouselTitle').innerText = item.title;
+            document.getElementById('carouselCategory').innerText = item.category;
+            document.getElementById('carouselDate').innerText = `${item.date} | STAR★NEWS`;
+
+            const dots = document.getElementById('carouselDots').children;
+            Array.from(dots).forEach((dot, idx) => {
+                if (idx === currentSlide) {
+                    dot.className = "w-5 h-2 rounded-full bg-white transition-all";
+                } else {
+                    dot.className = "w-2 h-2 rounded-full bg-white/40 transition-all";
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % carouselItems.length;
+            updateSlideUI();
+            resetAutoSlide();
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + carouselItems.length) % carouselItems.length;
+            updateSlideUI();
+            resetAutoSlide();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlideUI();
+            resetAutoSlide();
+        }
+
+        function startAutoSlide() {
+            slideInterval = setInterval(nextSlide, 4000);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(slideInterval);
+            startAutoSlide();
+        }
+
+        // Category Selection UI Interaction
+        function selectCategory(element, catKey) {
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                btn.className = "category-btn text-gray-500 hover:text-gray-900 pb-1";
+            });
+            element.className = "category-btn text-blue-600 border-b-2 border-blue-600 pb-1 font-bold";
+            showToast(`'${element.innerText}' 카테고리 뉴스를 불러왔습니다.`);
+        }
+
+        // Search & Toast Helpers
+        function toggleMobileSearch() {
+            const searchArea = document.getElementById('mobileSearchArea');
+            searchArea.classList.toggle('hidden');
+        }
+
+        function performSearch(type) {
+            const inputId = type === 'desktop' ? 'desktopSearchInput' : 'mobileSearchInput';
+            const val = document.getElementById(inputId).value;
+            if(val.trim()) {
+                showToast(`'${val}' 검색 결과 페이지로 이동합니다.`);
+            } else {
+                showToast('검색어를 입력해주세요.');
+            }
+        }
+
+        function setActiveNav(element, tab) {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-400');
+            });
+            element.classList.remove('text-gray-400');
+            element.classList.add('text-blue-600');
+            showToast(`${tab.toUpperCase()} 메뉴 클릭됨`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
 </body>
 </html>
